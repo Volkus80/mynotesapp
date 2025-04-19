@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MyNotesProj</string>
+    <string name="default_title">Заметка</string>
+    <string name="default_first_note">Пусто</string>
+    <string name="notes_list_title">Заметки</string>
+    <string name="delete_note_dialog_title">Удаление заметки</string>
+    <string name="delete_note_dialog_message">Вы уверены, что хотите удалить заметку?</string>
+    <string name="no">Нет</string>
+    <string name="yes">Да</string>
+</resources>
