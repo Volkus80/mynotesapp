@@ -3,6 +3,8 @@ package ru.volkus.mynotesproj.presentation
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import ru.volkus.mynotesproj.R
@@ -17,20 +19,18 @@ class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (index: Int
     fun bind(note: Note) {
         this.note = note
         with(binding) {
-            tvTitle.text = if(note.header.isNotBlank()) {
-                note.header
-            } else {
+            tvTitle.text = note.header.ifBlank {
                 ContextCompat.getString(binding.root.context, R.string.default_title)
             }
             tvDescription.text = if(note.items.isNotEmpty() && note.items[0].text.isNotBlank()) {
                 note.items[0].text
             } else ContextCompat.getString(binding.root.context, R.string.default_first_note)
-            tvDateCreation.text = note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM YYY"))
+            tvDateCreation.text = note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy"))
         }
     }
 }
 
-class NotesListAdapter(private val notes: MutableList<Note>, val cb: (index: Int) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
+class NotesListAdapter(val notes: MutableList<Note>, val cb: (index: Int) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = LayoutNoteListItemBinding.inflate(inflater, parent, false)

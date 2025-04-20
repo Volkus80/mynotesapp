@@ -8,7 +8,7 @@ import ru.volkus.mynotesproj.models.Note
 
 private const val TAG = "NotesViewModel"
 class NotesViewModel: ViewModel() {
-    val notes = mutableListOf<Note>()
+    private val notes = mutableListOf<Note>()
 
     init {
         for (index in 1..10) {
@@ -17,10 +17,32 @@ class NotesViewModel: ViewModel() {
         }
     }
 
-    fun removeNote(index: Int) {
-        Log.i(TAG, "removeNote started index = $index")
+    private val _filterValue = MutableLiveData("")
+
+    val filterValue: LiveData<String> get() = _filterValue
+
+    fun setFilter(part: String) {
+        _filterValue.value = part
+    }
+
+    private val _filteredNotes = MutableLiveData(notes)
+    val filteredNotes: LiveData<MutableList<Note>> get() = _filteredNotes
+    fun setFiltered() {
+        Log.i(TAG, "filter started")
+        Log.i(TAG, _filteredNotes.value.toString())
+        _filteredNotes.value = filter()
+        Log.i(TAG, "filter result = ${_filteredNotes.value}")
+    }
+
+    private fun filter() = notes.filter { it.header.contains(_filterValue.value!!.toRegex()) } as MutableList
+
+
+
+    fun removeNote(note: Note) {
+        Log.i(TAG, "removeNote started note = $note")
         Log.i(TAG, notes.toString())
-        notes.removeAt(index)
+        notes.remove(note)
+        _filteredNotes.value = filter()
         Log.i(TAG, notes.toString())
     }
 }
