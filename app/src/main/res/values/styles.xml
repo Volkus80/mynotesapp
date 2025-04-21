@@ -23,4 +23,8 @@
         <item name="android:typeface">sans</item>
         <item name="android:textStyle">normal|italic</item>
     </style>
+
+    <style name="MyCheckBox" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="buttonTint">@color/check_box</item>
+    </style>
 </resources>

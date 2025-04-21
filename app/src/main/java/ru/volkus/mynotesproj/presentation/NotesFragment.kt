@@ -47,9 +47,6 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         val helper = ItemTouchHelper(noteSwipeDeleter)
         helper.attachToRecyclerView(binding.rvNotesList)
 
-        viewModel.filterValue.observe(viewLifecycleOwner) {
-            binding.etFind.setText(it)
-        }
 
         viewModel.filteredNotes.observe(viewLifecycleOwner) {
             val filteredNotes = it.toMutableList()
@@ -65,7 +62,7 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         super.onStart()
         binding.etFind.doOnTextChanged{text, _, _, _ ->
             viewModel.setFilter("$text")
-//            adapter.notifyDataSetChanged()
+            viewModel.setFiltered()
         }
     }
 
@@ -73,32 +70,4 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         super.onDestroyView()
         _binding = null
     }
-
-//    val itemCb = object: ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT or ItemTouchHelper.LEFT) {
-//        override fun onMove(
-//            recyclerView: RecyclerView,
-//            viewHolder: RecyclerView.ViewHolder,
-//            target: RecyclerView.ViewHolder
-//        ): Boolean {
-//            return false
-//        }
-//
-//        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-//            val position = viewHolder.layoutPosition
-//            val isUserAgree = AlertDialog.Builder(requireContext())
-//                .setTitle(R.string.delete_note_dialog_title)
-//                .setMessage(R.string.delete_note_dialog_message)
-//                .setPositiveButton(R.string.yes) {_, _ ->
-//                    viewModel.removeNote(position)
-//                    adapter?.notifyItemRemoved(position)
-//                }
-//                .setNegativeButton(R.string.no) {_, _ ->
-//                    adapter?.notifyItemChanged(position)
-//                }
-//
-//            isUserAgree.show()
-//        }
-//
-//    }
-
 }
