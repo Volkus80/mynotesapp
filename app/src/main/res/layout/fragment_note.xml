@@ -24,14 +24,14 @@
             android:background="@android:color/transparent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
-<!--        <ImageView-->
-<!--            android:layout_width="0dp"-->
-<!--            android:layout_height="60dp"-->
-<!--            android:src="@drawable/ic_add"-->
-<!--            android:layout_weight="1"-->
-<!--            android:gravity="right"-->
-<!--            app:layout_constraintTop_toTopOf="parent"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"/>-->
+        <ImageButton
+            android:id="@+id/btnAddItem"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:src="@drawable/ic_add"
+            android:background="@android:color/transparent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -40,11 +40,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
+        android:hint="@string/default_title"
         android:textAppearance="?attr/textAppearanceHeadline4"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:text="Заголовок"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header" />
 
     <TextView
         android:id="@+id/tvDateTime"
@@ -56,12 +56,14 @@
         tools:text="25 мар 2025г. 12:25" />
 
     <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvItems"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginVertical="5dp"
-        app:layout_constraintStart_toStartOf="parent"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvDateTime"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvDateTime" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

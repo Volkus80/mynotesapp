@@ -34,9 +34,7 @@ class NotesViewModel: ViewModel() {
         Log.i(TAG, "filter result = ${_filteredNotes.value}")
     }
 
-    private fun filter() = notes.filter { it.header.contains(_filterValue.value!!.toRegex()) } as MutableList
-
-
+    private fun filter() = notes.filter { it.header.lowercase().contains(_filterValue.value!!.lowercase().toRegex()) } as MutableList
 
     fun removeNote(note: Note) {
         Log.i(TAG, "removeNote started note = $note")
@@ -44,5 +42,13 @@ class NotesViewModel: ViewModel() {
         notes.remove(note)
         _filteredNotes.value = filter()
         Log.i(TAG, notes.toString())
+    }
+
+    fun addNote(note: Note) {
+        Log.i(TAG, "addNote started")
+        notes.add(note)
+        Log.i(TAG, "notes $notes")
+        _filteredNotes.value = filter()
+        Log.i(TAG, "_filteredNotes.value ${_filteredNotes.value}")
     }
 }

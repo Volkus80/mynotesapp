@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter
 
 private const val TAG = "NoteViewHolder"
 
-class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (index: Int) -> Unit = {}): RecyclerView.ViewHolder(binding.root) {
+class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (note: Note) -> Unit = {}): RecyclerView.ViewHolder(binding.root) {
     var note:Note? = null
     fun bind(note: Note) {
         this.note = note
@@ -30,7 +30,7 @@ class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (index: Int
     }
 }
 
-class NotesListAdapter(val notes: MutableList<Note>, val cb: (index: Int) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
+class NotesListAdapter(val notes: MutableList<Note>, val cb: (note: Note) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = LayoutNoteListItemBinding.inflate(inflater, parent, false)
@@ -45,7 +45,7 @@ class NotesListAdapter(val notes: MutableList<Note>, val cb: (index: Int) -> Uni
         holder.binding.note.setOnClickListener{
             Log.i(TAG, "note clicked")
             Log.i(TAG, "position $position")
-            holder.cb(position)
+            holder.cb(note)
             notifyDataSetChanged()
         }
     }

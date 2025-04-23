@@ -5,15 +5,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import ru.volkus.mynotesproj.R
 import ru.volkus.mynotesproj.databinding.FragmentNotesBinding
+import ru.volkus.mynotesproj.models.Note
 
 private const val TAG = "NotesFragment"
+const val NOTE = "note"
 class NotesFragment: Fragment(R.layout.fragment_notes) {
     private var _binding: FragmentNotesBinding? = null
 
@@ -26,7 +30,9 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i(TAG, "NotesFragment started")
-        adapter = NotesListAdapter(viewModel.filteredNotes.value?.toMutableList() ?: mutableListOf())
+        adapter = NotesListAdapter(
+            viewModel.filteredNotes.value?.toMutableList() ?: mutableListOf(),
+        ) { note: Note -> goToNote(note) }
     }
 
     override fun onCreateView(
@@ -58,16 +64,32 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.btnAddNote.setOnClickListener {
+            val newNote = Note()
+            viewModel.addNote(newNote)
+            adapter.notifyItemInserted(viewModel.filteredNotes.value!!.size - 1)
+            goToNote(newNote)
+        }
+    }
+
+
     override fun onStart() {
         super.onStart()
         binding.etFind.doOnTextChanged{text, _, _, _ ->
             viewModel.setFilter("$text")
             viewModel.setFiltered()
         }
+        adapter.notifyDataSetChanged()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun goToNote(note: Note) {
+        findNavController().navigate(R.id.action_notesFragment_to_noteFragment, bundleOf(NOTE to note))
     }
 }
