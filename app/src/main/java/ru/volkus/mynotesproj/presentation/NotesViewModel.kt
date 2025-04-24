@@ -1,19 +1,24 @@
 package ru.volkus.mynotesproj.presentation
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import ru.volkus.mynotesproj.models.Note
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import ru.volkus.mynotesproj.data.NotesRepo
+import ru.volkus.mynotesproj.models.NoteData
 
 private const val TAG = "NotesViewModel"
 class NotesViewModel: ViewModel() {
-    private val notes = mutableListOf<Note>()
+    private val notesRepo = NotesRepo.getInstance()
+    private val _notes = MutableStateFlow<MutableList<NoteData>>(mutableListOf())
+    val notes get() = _notes.asStateFlow()
 
     init {
-        for (index in 1..10) {
-            val note = Note("Заголовок$index")
-            notes += note
+        viewModelScope.launch {
+            notesRepo.getNotes().collect{_notes.value = it}
         }
     }
 
@@ -25,30 +30,12 @@ class NotesViewModel: ViewModel() {
         _filterValue.value = part
     }
 
-    private val _filteredNotes = MutableLiveData(notes)
-    val filteredNotes: LiveData<MutableList<Note>> get() = _filteredNotes
-    fun setFiltered() {
-        Log.i(TAG, "filter started")
-        Log.i(TAG, _filteredNotes.value.toString())
-        _filteredNotes.value = filter()
-        Log.i(TAG, "filter result = ${_filteredNotes.value}")
+    suspend fun filter() {
+        notesRepo.filterNotes(_filterValue.value ?: "").collect{_notes.value = it}
     }
 
-    private fun filter() = notes.filter { it.header.lowercase().contains(_filterValue.value!!.lowercase().toRegex()) } as MutableList
-
-    fun removeNote(note: Note) {
-        Log.i(TAG, "removeNote started note = $note")
-        Log.i(TAG, notes.toString())
-        notes.remove(note)
-        _filteredNotes.value = filter()
-        Log.i(TAG, notes.toString())
+    fun removeNote(note: NoteData) {
+        notesRepo.deleteNote(note)
     }
 
-    fun addNote(note: Note) {
-        Log.i(TAG, "addNote started")
-        notes.add(note)
-        Log.i(TAG, "notes $notes")
-        _filteredNotes.value = filter()
-        Log.i(TAG, "_filteredNotes.value ${_filteredNotes.value}")
-    }
 }

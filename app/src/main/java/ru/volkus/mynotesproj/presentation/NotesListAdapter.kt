@@ -3,34 +3,36 @@ package ru.volkus.mynotesproj.presentation
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Filter
-import android.widget.Filterable
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import ru.volkus.mynotesproj.R
 import ru.volkus.mynotesproj.databinding.LayoutNoteListItemBinding
-import ru.volkus.mynotesproj.models.Note
+import ru.volkus.mynotesproj.models.NoteData
 import java.time.format.DateTimeFormatter
 
 private const val TAG = "NoteViewHolder"
 
-class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (note: Note) -> Unit = {}): RecyclerView.ViewHolder(binding.root) {
-    var note:Note? = null
-    fun bind(note: Note) {
-        this.note = note
+class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (note: NoteData) -> Unit = {}): RecyclerView.ViewHolder(binding.root) {
+    var note:NoteData? = null
+    fun bind(noteData: NoteData) {
+        this.note = noteData
         with(binding) {
-            tvTitle.text = note.header.ifBlank {
+            tvTitle.text = noteData.note.header.ifBlank {
                 ContextCompat.getString(binding.root.context, R.string.default_title)
             }
-            tvDescription.text = if(note.items.isNotEmpty() && note.items[0].text.isNotBlank()) {
-                note.items[0].text
-            } else ContextCompat.getString(binding.root.context, R.string.default_first_note)
-            tvDateCreation.text = note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy"))
+
+            tvDescription.text = if(noteData.items.isNotEmpty() && noteData.items[0].text.isNotBlank()) {
+                noteData.items[0].text
+            } else {
+                ContextCompat.getString(binding.root.context, R.string.default_first_note)
+            }
+
+            tvDateCreation.text = noteData.note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy"))
         }
     }
 }
 
-class NotesListAdapter(val notes: MutableList<Note>, val cb: (note: Note) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
+class NotesListAdapter(val notes: MutableList<NoteData>, val cb: (note: NoteData) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = LayoutNoteListItemBinding.inflate(inflater, parent, false)

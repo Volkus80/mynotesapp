@@ -13,6 +13,12 @@ lifecycleExtensions = "2.2.0"
 recyclerview = "1.2.1"
 navigation = "5.4.1"
 navigationKtx = "2.5.3"
+kotlinxCoroutines = "1.9.0"
+roomRuntime = "2.6.1"
+#kspVer = "2.1.20-1.0.32"
+kspVer = "1.9.0-1.0.13"
+roomRuntimeAndroid = "2.7.0"
+
 
 
 [libraries]
@@ -29,8 +35,16 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 navigation = { group = "com.google.android.libraries.navigation", name = "navigation", version.ref = "navigation" }
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationKtx" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomRuntime" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomRuntime" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomRuntime" }
+androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "roomRuntime" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "kspVer"}
+kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin"}
 

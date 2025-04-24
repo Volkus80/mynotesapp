@@ -2,27 +2,31 @@ package ru.volkus.mynotesproj.presentation
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
+import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView.LayoutManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import ru.volkus.mynotesproj.R
 import ru.volkus.mynotesproj.databinding.FragmentNoteBinding
 import ru.volkus.mynotesproj.models.Item
-import ru.volkus.mynotesproj.models.Note
+import ru.volkus.mynotesproj.models.NoteData
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.coroutines.coroutineContext
 
 private const val TAG = "NoteFragment"
 class NoteFragment: Fragment(R.layout.fragment_note) {
-    var note: Note? = null
+    lateinit var noteData: NoteData
+
+    val viewModel by viewModels<NoteDataViewModel> ()
 
     var _binding: FragmentNoteBinding? = null
     val binding get() = requireNotNull(_binding)
@@ -30,9 +34,9 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            note = requireArguments().getParcelable(NOTE, Note::class.java)
+            noteData = requireArguments().getParcelable(NOTE, NoteData::class.java) ?: NoteData()
         } else {
-            note = requireArguments().getParcelable(NOTE)
+            noteData = requireArguments().getParcelable(NOTE) ?: NoteData()
         }
     }
 
@@ -43,39 +47,56 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     ): View? {
         _binding = FragmentNoteBinding.inflate(inflater, container, false)
 
-        val adapter = NoteItemsAdapter(note?.items ?: mutableListOf())
+        val adapter = NoteItemsAdapter(noteData?.items ?: mutableListOf())
         binding.apply {
             rvItems.layoutManager = LinearLayoutManager(context)
             rvItems.adapter = adapter
-            etTitle.setText(note?.header ?: resources.getText(R.string.default_first_note))
+            etTitle.setText(noteData?.note?.header ?: resources.getText(R.string.default_first_note))
             etTitle.requestFocus()
-            tvDateTime.setText(note?.timeStamp?.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note))
+            tvDateTime.setText(noteData?.note?.timeStamp?.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note))
         }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    addNote()
+                }
+
+            })
 
         return  binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.btnBack.setOnClickListener { findNavController().popBackStack() }
+        binding.btnBack.setOnClickListener {
+            addNote()
+        }
         binding.btnAddItem.setOnClickListener {
-            note?.let {
-                note!!.items.add(
-                    Item(uuid = UUID.randomUUID(), parentUuid = note!!.uuid)
+            noteData?.let {
+                noteData!!.items.add(
+                    Item(itemId = UUID.randomUUID(), parentId = noteData!!.note.noteId)
                 )
             }
 
-            val adapter = NoteItemsAdapter(note!!.items)
+            val adapter = NoteItemsAdapter(noteData!!.items)
             binding.rvItems.adapter = adapter
 
         }
 
-        binding.etTitle.doOnTextChanged{text, _, _, _ ->  note!!.header = text.toString()}
+        binding.etTitle.doOnTextChanged{text, _, _, _ ->  noteData!!.note.header = text.toString()}
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun addNote() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            viewModel.addNote(noteData)
+        }
+        findNavController().popBackStack()
     }
 
 

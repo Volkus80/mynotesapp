@@ -9,12 +9,18 @@ import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import ru.volkus.mynotesproj.R
 import ru.volkus.mynotesproj.databinding.FragmentNotesBinding
-import ru.volkus.mynotesproj.models.Note
+import ru.volkus.mynotesproj.models.NoteData
 
 private const val TAG = "NotesFragment"
 const val NOTE = "note"
@@ -25,14 +31,14 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
 
     private val viewModel: NotesViewModel by viewModels()
 
-    private lateinit var adapter: NotesListAdapter
+    private var adapter: NotesListAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i(TAG, "NotesFragment started")
         adapter = NotesListAdapter(
-            viewModel.filteredNotes.value?.toMutableList() ?: mutableListOf(),
-        ) { note: Note -> goToNote(note) }
+            viewModel.notes.value,
+        ) { note: NoteData -> goToNote(note) }
     }
 
     override fun onCreateView(
@@ -46,19 +52,22 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
 
         binding.rvNotesList.adapter = adapter
 
-        binding.etFind.setText(viewModel.filterValue.value)
-
-        val noteSwipeDeleter = NoteSwipeDeleter(adapter, requireContext()){ pos -> viewModel.removeNote(pos)}
+        val noteSwipeDeleter = NoteSwipeDeleter(adapter, requireContext()){ pos ->
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                viewModel.removeNote(pos)
+            }
+        }
 
         val helper = ItemTouchHelper(noteSwipeDeleter)
         helper.attachToRecyclerView(binding.rvNotesList)
 
+        binding.etFind.setText(viewModel.filterValue.value)
 
-        viewModel.filteredNotes.observe(viewLifecycleOwner) {
-            val filteredNotes = it.toMutableList()
-            adapter.notes.clear()
-            adapter.notes.addAll(filteredNotes)
-            adapter.notifyDataSetChanged()
+        viewModel.filterValue.observe(viewLifecycleOwner) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                delay(500)
+                viewModel.filter()
+            }
         }
 
         return binding.root
@@ -66,10 +75,20 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.notes.collect {
+                    adapter?.notes?.clear()
+                    adapter?.notes?.addAll(it)
+                    adapter?.notifyDataSetChanged()
+                    Log.i(TAG, "notesList = $it")
+                }
+            }
+        }
+
         binding.btnAddNote.setOnClickListener {
-            val newNote = Note()
-            viewModel.addNote(newNote)
-            adapter.notifyItemInserted(viewModel.filteredNotes.value!!.size - 1)
+            val newNote = NoteData()
             goToNote(newNote)
         }
     }
@@ -77,11 +96,10 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
 
     override fun onStart() {
         super.onStart()
+        Log.i(TAG, "onStart")
         binding.etFind.doOnTextChanged{text, _, _, _ ->
             viewModel.setFilter("$text")
-            viewModel.setFiltered()
         }
-        adapter.notifyDataSetChanged()
     }
 
     override fun onDestroyView() {
@@ -89,7 +107,7 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         _binding = null
     }
 
-    private fun goToNote(note: Note) {
+    private fun goToNote(note: NoteData) {
         findNavController().navigate(R.id.action_notesFragment_to_noteFragment, bundleOf(NOTE to note))
     }
 }
