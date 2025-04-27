@@ -2,6 +2,7 @@ package ru.volkus.mynotesproj.presentation
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +34,7 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i(TAG, TAG)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             noteData = requireArguments().getParcelable(NOTE, NoteData::class.java) ?: NoteData()
         } else {
@@ -47,13 +49,15 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     ): View? {
         _binding = FragmentNoteBinding.inflate(inflater, container, false)
 
-        val adapter = NoteItemsAdapter(noteData?.items ?: mutableListOf())
+        val adapter = NoteItemsAdapter(noteData.items){addNote()}
         binding.apply {
-            rvItems.layoutManager = LinearLayoutManager(context)
+            val layoutManager = LinearLayoutManager(context)
+            layoutManager.stackFromEnd = true
+            rvItems.layoutManager = layoutManager
             rvItems.adapter = adapter
-            etTitle.setText(noteData?.note?.header ?: resources.getText(R.string.default_first_note))
+            etTitle.setText(noteData.note.header)
             etTitle.requestFocus()
-            tvDateTime.setText(noteData?.note?.timeStamp?.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note))
+            tvDateTime.setText(noteData.note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note))
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
@@ -69,19 +73,13 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         binding.btnBack.setOnClickListener {
             addNote()
         }
+
         binding.btnAddItem.setOnClickListener {
-            noteData?.let {
-                noteData!!.items.add(
-                    Item(itemId = UUID.randomUUID(), parentId = noteData!!.note.noteId)
-                )
-            }
-
-            val adapter = NoteItemsAdapter(noteData!!.items)
-            binding.rvItems.adapter = adapter
-
+            addItem()
         }
 
         binding.etTitle.doOnTextChanged{text, _, _, _ ->  noteData!!.note.header = text.toString()}
@@ -92,11 +90,21 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
         _binding = null
     }
 
+
+
     private fun addNote() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             viewModel.addNote(noteData)
         }
         findNavController().navigate(R.id.exitNote)
+    }
+
+    private fun addItem() {
+        noteData.items.add(
+            Item(itemId = UUID.randomUUID(), parentId = noteData.note.noteId)
+        )
+        val adapter = NoteItemsAdapter(noteData.items)
+        binding.rvItems.adapter = adapter
     }
 
 
