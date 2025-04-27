@@ -11,12 +11,23 @@
         android:label="NotesFragment"
         tools:layout="@layout/fragment_notes">
         <action
-            android:id="@+id/action_notesFragment_to_noteFragment"
-            app:destination="@id/noteFragment" />
+            android:id="@+id/goToNote"
+            app:destination="@id/noteFragment"
+            app:exitAnim="@anim/anim_list_exit"
+            app:enterAnim="@anim/anim_note_enter"
+            />
     </fragment>
     <fragment
         android:id="@+id/noteFragment"
         android:name="ru.volkus.mynotesproj.presentation.NoteFragment"
         android:label="NoteFragment"
-        tools:layout="@layout/fragment_note"/>
+        tools:layout="@layout/fragment_note">
+        <action
+            android:id="@+id/exitNote"
+            app:destination="@id/notesFragment"
+            app:exitAnim="@anim/anim_note_exit"
+            app:enterAnim="@anim/anim_list_enter"
+
+            />
+    </fragment>
 </navigation>

@@ -96,7 +96,7 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             viewModel.addNote(noteData)
         }
-        findNavController().popBackStack()
+        findNavController().navigate(R.id.exitNote)
     }
 
 

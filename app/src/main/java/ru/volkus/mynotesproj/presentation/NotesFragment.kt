@@ -108,6 +108,6 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
     }
 
     private fun goToNote(note: NoteData) {
-        findNavController().navigate(R.id.action_notesFragment_to_noteFragment, bundleOf(NOTE to note))
+        findNavController().navigate(R.id.goToNote, bundleOf(NOTE to note))
     }
 }
