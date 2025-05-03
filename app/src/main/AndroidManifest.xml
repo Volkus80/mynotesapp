@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyNotesProj"
         tools:targetApi="31"
+        android:enableOnBackInvokedCallback="true"
         android:name=".presentation.NotesApp">
         <activity
             android:name=".presentation.MainActivity"

@@ -1,9 +1,13 @@
 package ru.volkus.mynotesproj.presentation
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.method.KeyListener
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnKeyListener
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
@@ -91,6 +95,8 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
             val newNote = NoteData()
             goToNote(newNote)
         }
+
+
     }
 
 
@@ -100,6 +106,12 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         binding.etFind.doOnTextChanged{text, _, _, _ ->
             viewModel.setFilter("$text")
         }
+
+        binding.etFind.setOnKeyListener { v, keyCode, event ->
+            Log.i(TAG, "PRESSED")
+            false
+        }
+
     }
 
     override fun onDestroyView() {

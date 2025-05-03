@@ -27,4 +27,9 @@
     <style name="MyCheckBox" parent="Widget.AppCompat.CompoundButton.CheckBox">
         <item name="buttonTint">@color/check_box</item>
     </style>
+
+    <style name="MyInput" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="android:paddingTop">0dp</item>
+        <item name="boxCollapsedPaddingTop">0dp</item>
+    </style>
 </resources>

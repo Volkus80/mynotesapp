@@ -3,6 +3,7 @@ package ru.volkus.mynotesproj.presentation
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -49,20 +50,24 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     ): View? {
         _binding = FragmentNoteBinding.inflate(inflater, container, false)
 
-        val adapter = NoteItemsAdapter(noteData.items){addNote()}
+        val adapter = NoteItemsAdapter(noteData.items){addItem()}
         binding.apply {
             val layoutManager = LinearLayoutManager(context)
-            layoutManager.stackFromEnd = true
+//            layoutManager.stackFromEnd = true
             rvItems.layoutManager = layoutManager
             rvItems.adapter = adapter
             etTitle.setText(noteData.note.header)
             etTitle.requestFocus()
             tvDateTime.setText(noteData.note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note))
+
         }
+
+
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
+                    Log.i(TAG, "onBackPressed started")
                     addNote()
                 }
 
@@ -82,7 +87,8 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
             addItem()
         }
 
-        binding.etTitle.doOnTextChanged{text, _, _, _ ->  noteData!!.note.header = text.toString()}
+        binding.etTitle.doOnTextChanged{text, _, _, _ ->  noteData.note.header = text.toString()}
+
     }
 
     override fun onDestroyView() {
@@ -91,8 +97,8 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     }
 
 
-
     private fun addNote() {
+        Log.i(TAG, "addNote started")
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             viewModel.addNote(noteData)
         }
@@ -103,9 +109,9 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
         noteData.items.add(
             Item(itemId = UUID.randomUUID(), parentId = noteData.note.noteId)
         )
-        val adapter = NoteItemsAdapter(noteData.items)
+        val adapter = NoteItemsAdapter(noteData.items){addItem()}
         binding.rvItems.adapter = adapter
+        binding.rvItems.layoutManager?.scrollToPosition(noteData.items.size - 1)
     }
-
 
 }

@@ -14,16 +14,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <EditText
         android:id="@+id/text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
-        android:imeOptions="actionDone"
+        android:inputType="textMultiLine"
+        android:textAlignment="viewStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/chbDone"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Нужно сделать всякие штуки-дрюки купить всякую лабуду" />
+
+<!--    <EditText-->
+<!--        android:id="@+id/text"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:background="@android:color/transparent"-->
+<!--        android:imeOptions="actionDone"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toEndOf="@id/chbDone"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        tools:text="Нужно сделать всякие штуки-дрюки купить всякую лабуду" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
