@@ -34,8 +34,12 @@ class NotesViewModel: ViewModel() {
         notesRepo.filterNotes(_filterValue.value ?: "").collect{_notes.value = it}
     }
 
-    fun removeNote(note: NoteData) {
+    suspend fun removeNote(note: NoteData) {
         notesRepo.deleteNote(note)
+    }
+
+    suspend fun addNote(note: NoteData) {
+        notesRepo.addNote(note)
     }
 
 }

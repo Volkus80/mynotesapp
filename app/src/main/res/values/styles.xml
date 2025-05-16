@@ -32,4 +32,8 @@
         <item name="android:paddingTop">0dp</item>
         <item name="boxCollapsedPaddingTop">0dp</item>
     </style>
+
+    <style name="MyActionBarStyle" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <item name="colorControlNormal">@color/menu_text</item>
+    </style>
 </resources>

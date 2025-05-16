@@ -29,5 +29,11 @@
             app:enterAnim="@anim/anim_list_enter"
 
             />
+        <argument
+            android:name="noteId"
+            app:argType="java.util.UUID" />
+        <argument
+            android:name="noteState"
+            app:argType="ru.volkus.mynotesproj.models.NoteState" />
     </fragment>
 </navigation>

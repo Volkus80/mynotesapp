@@ -18,6 +18,7 @@ roomRuntime = "2.6.1"
 #kspVer = "2.1.20-1.0.32"
 kspVer = "1.9.0-1.0.13"
 roomRuntimeAndroid = "2.7.0"
+sargs = "2.7.6"
 
 
 
@@ -47,4 +48,6 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspVer"}
 kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin"}
+safeargs = {id = "androidx.navigation.safeargs"}
+safeargsKotlin = {id = "androidx.navigation.safeargs.kotlin", version.ref = "sargs"}
 

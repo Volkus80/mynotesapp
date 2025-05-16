@@ -2,6 +2,7 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
-    alias(libs.plugins.kapt)
+    alias(libs.plugins.kapt) apply  false
+    alias(libs.plugins.safeargsKotlin) apply  false
 //    alias(libs.plugins.ksp) apply false
 }

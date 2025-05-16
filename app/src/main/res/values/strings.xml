@@ -7,4 +7,6 @@
     <string name="delete_note_dialog_message">Вы уверены, что хотите удалить заметку?</string>
     <string name="no">Нет</string>
     <string name="yes">Да</string>
+    <string name="addNoteItem">Добавить</string>
+    <string name="removeNoteItem">Удалить</string>
 </resources>

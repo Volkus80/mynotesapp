@@ -1,13 +1,9 @@
 package ru.volkus.mynotesproj.presentation
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.method.KeyListener
 import android.util.Log
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnKeyListener
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
@@ -25,9 +21,11 @@ import kotlinx.coroutines.launch
 import ru.volkus.mynotesproj.R
 import ru.volkus.mynotesproj.databinding.FragmentNotesBinding
 import ru.volkus.mynotesproj.models.NoteData
+import ru.volkus.mynotesproj.models.NoteState
 
 private const val TAG = "NotesFragment"
-const val NOTE = "note"
+const val NOTE_KEY = "note"
+const val EDIT_TYPE_KEY = "editTypeKey"
 class NotesFragment: Fragment(R.layout.fragment_notes) {
     private var _binding: FragmentNotesBinding? = null
 
@@ -42,7 +40,7 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         Log.i(TAG, "NotesFragment started")
         adapter = NotesListAdapter(
             viewModel.notes.value,
-        ) { note: NoteData -> goToNote(note) }
+        ) { note: NoteData -> goToNote(note, NoteState.EDIT) }
     }
 
     override fun onCreateView(
@@ -83,35 +81,30 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.notes.collect {
-                    adapter?.notes?.clear()
-                    adapter?.notes?.addAll(it)
-                    adapter?.notifyDataSetChanged()
-                    Log.i(TAG, "notesList = $it")
+                    updateNotesAdapter(it)
                 }
             }
         }
 
         binding.btnAddNote.setOnClickListener {
             val newNote = NoteData()
-            goToNote(newNote)
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.addNote(newNote)
+                goToNote(newNote, NoteState.NEW)
+            }
         }
-
-
     }
 
 
     override fun onStart() {
         super.onStart()
         Log.i(TAG, "onStart")
-        binding.etFind.doOnTextChanged{text, _, _, _ ->
+
+        binding.etFind.doOnTextChanged { text, start, before, count ->
             viewModel.setFilter("$text")
-        }
+            Log.i(TAG, "textChangedParams text = $text start = $start before = $before count = $count")
 
-        binding.etFind.setOnKeyListener { v, keyCode, event ->
-            Log.i(TAG, "PRESSED")
-            false
         }
-
     }
 
     override fun onDestroyView() {
@@ -119,7 +112,17 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         _binding = null
     }
 
-    private fun goToNote(note: NoteData) {
-        findNavController().navigate(R.id.goToNote, bundleOf(NOTE to note))
+    private fun goToNote(note: NoteData, noteState: NoteState) {
+        findNavController().navigate(NotesFragmentDirections.goToNote(note.note.noteId, noteState))
+//        findNavController().navigate(R.id.goToNote, bundleOf(NOTE_KEY to note))
+    }
+
+    private fun updateNotesAdapter(notesList: MutableList<NoteData>) {
+        adapter?.let {
+            it.notes.clear()
+            it.notes.addAll(notesList)
+            it.notifyDataSetChanged()
+            Log.i(TAG, "notesList = $notesList")
+        }
     }
 }
