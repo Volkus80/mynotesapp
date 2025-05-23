@@ -1,5 +1,6 @@
 package ru.volkus.mynotesproj.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,65 +9,106 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.volkus.mynotesproj.data.NotesRepo
 import ru.volkus.mynotesproj.models.Item
-import ru.volkus.mynotesproj.models.Note
+import ru.volkus.mynotesproj.models.NoteData
+import ru.volkus.mynotesproj.utils.ItemsAdapterUpdaterType
 import java.util.UUID
+
+private const val TAG = "NoteDataViewModel"
 
 class NoteDataViewModel(private val noteId: UUID): ViewModel() {
     private val notesRepo = NotesRepo.getInstance()
 
-    private val _note = MutableStateFlow<Note?>(null)
-
-    val note get() = _note.asStateFlow()
-
-    private val _items = MutableStateFlow<List<Item>>(mutableListOf())
-    val items get() = _items.asStateFlow()
+    private val _noteData = MutableStateFlow<NoteData?>(null)
+    val noteData get() = _noteData.asStateFlow()
+//    private val _note = MutableStateFlow<Note?>(null)
+//    val note get() = _note.asStateFlow()
+//
+//    private val _items = MutableStateFlow<MutableList<Item>?>(null)
+//    val items get() = _items.asStateFlow()
 
     private var baseItems = listOf<Item>()
+
+    var updaterType = ItemsAdapterUpdaterType.CREATE
 
 
 
     init {
+        Log.i(TAG, "initiating")
         viewModelScope.launch {
-            val noteData = notesRepo.getNote(noteId)
-            _note.value = noteData.note
-            _items.value = noteData.items
-            baseItems = noteData.items
+            notesRepo.getNote(noteId).collect{
+                Log.i(TAG, "noteData = $it")
+                it?.let {
+                    _noteData.value = it
+                    baseItems = it.items
+                }
+            }
         }
     }
 
 
     fun addItem(item: Item) {
-        _items.update { it + item }
-//        viewModelScope.launch {
-//            notesRepo.addItem(item)
-//        }
+        Log.i(TAG, "viewModel addItem started")
+        _noteData?.update { nd ->
+            nd?.let {
+                val newItems = it.items.toMutableList()
+                newItems.add(item)
+                it.copy(items = newItems)
+            }
+        }
     }
 
-    fun removeItem(pos: Int) {
-        _items.update { it - it[pos] }
-//        viewModelScope.launch {
-//            notesRepo.deleteItems(listOf(item))
-//        }
+    fun removeItem(pos: UUID) {
+        Log.i(TAG, "removeItemStarted")
+        _noteData.value?.let {nd ->
+            val changedItems = nd.items.filter { it.itemId != pos }.toMutableList()
+            _noteData.update { nd.copy(items = changedItems) }
+        }
+    }
+
+    fun updateItem(item: Item) {
+        Log.i(TAG, "vm updateItem started $item noteData = ${_noteData.value}")
+        _noteData.value?.let { nd ->
+            Log.i(TAG, "updating noteData")
+            val newNd = nd.copy(items = nd.items.toMutableList())
+
+            newNd.items.forEach { i ->
+                if(i.itemId == item.itemId) {
+                    i.isDone = item.isDone
+                    i.text = item.text
+                }
+            }
+
+            _noteData.update { newNd }
+        }
     }
 
     fun setTitle(text: String) {
-        _note.value?.let { note ->
-            if (text != note.header) {
-                _note.update {
-                    note.copy(header = text)
+        _noteData.value?.let { nd ->
+            if (text != nd.note.header) {
+                updaterType = ItemsAdapterUpdaterType.UPDATE
+                _noteData.update {
+                    nd.copy(note = nd.note.copy(header = text))
                 }
             }
         }
     }
 
     suspend fun saveNoteDataChanges() {
-        _note.value?.let {
-            notesRepo.updateNote(it, baseItems, _items.value)
+        Log.i(TAG, "saveNoteDataChanges started")
+        _noteData.value?.let {
+            Log.i(TAG, "newNoteData = $it")
+            notesRepo.updateNote(it.note, baseItems, it.items)
         }
     }
 
     private fun deleteEmptyItems(items: MutableList<Item>): List<Item> {
-        val newItems = items.toMutableList().filter { it.text.isNotBlank() }
-        return newItems
+        return items.toMutableList().filter { it.text.isNotBlank() }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.launch {
+            saveNoteDataChanges()
+        }
     }
 }

@@ -2,13 +2,17 @@ package ru.volkus.mynotesproj.data
 
 import android.content.Context
 import androidx.room.Room
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import ru.volkus.mynotesproj.models.Item
 import ru.volkus.mynotesproj.models.Note
 import ru.volkus.mynotesproj.models.NoteData
 import java.util.UUID
 
 private const val DbName = "notes-db"
-class NotesRepo private constructor(context: Context){
+class NotesRepo private constructor(
+    context: Context){
     private val db = Room.databaseBuilder(context.applicationContext, NotesDB::class.java, DbName).build()
     companion object {
         private var INSTANCE: NotesRepo? = null
@@ -25,7 +29,7 @@ class NotesRepo private constructor(context: Context){
     }
 
     fun getNotes() = db.notesDao().getNotes()
-    suspend fun getNote(id:UUID) = db.notesDao().getNote(id)
+    fun getNote(id:UUID) = db.notesDao().getNote(id)
     fun getItems(id: UUID) = db.notesDao().getItems(id)
     suspend fun addNote(note: NoteData) {
         db.notesDao().addNote(note.note)

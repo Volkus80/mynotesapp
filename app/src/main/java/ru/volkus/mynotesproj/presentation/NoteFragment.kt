@@ -1,10 +1,12 @@
 package ru.volkus.mynotesproj.presentation
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
@@ -20,13 +22,15 @@ import kotlinx.coroutines.launch
 import ru.volkus.mynotesproj.R
 import ru.volkus.mynotesproj.databinding.FragmentNoteBinding
 import ru.volkus.mynotesproj.models.Item
+import ru.volkus.mynotesproj.utils.ItemsAdapterUpdaterSupplier
+import ru.volkus.mynotesproj.utils.ItemsAdapterUpdaterType
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 private const val TAG = "NoteFragment"
 class NoteFragment: Fragment(R.layout.fragment_note) {
-//    private lateinit var noteData: NoteData
-    val arguments: NoteFragmentArgs by navArgs()
+
+    private val arguments: NoteFragmentArgs by navArgs()
 
     private val viewModel: NoteDataViewModel by viewModels{NoteDataViewModelFactory(arguments.noteId)}
 
@@ -38,14 +42,11 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i(TAG, TAG)
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//            noteData = requireArguments().getParcelable(NOTE_KEY, NoteData::class.java) ?: NoteData()
-//        } else {
-//            noteData = requireArguments().getParcelable(NOTE_KEY) ?: NoteData()
-//        }
-
-//        adapter = NoteItemsAdapter(noteData.items){addItem()}
-        adapter = NoteItemsAdapter(viewModel.items.value){addItem()}
+        Log.i(TAG, "items = ${viewModel.noteData.value?.items}")
+        adapter = NoteItemsAdapter(
+            viewModel.noteData.value?.items ?: mutableListOf(),
+            { addItem() },
+            { item -> updateItem(item) })
     }
 
     override fun onCreateView(
@@ -57,16 +58,15 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
 
         binding.apply {
             val layoutManager = LinearLayoutManager(context)
-//            layoutManager.stackFromEnd = true
             rvItems.layoutManager = layoutManager
             rvItems.adapter = adapter
 
-            viewModel.note.value?.let {
-                etTitle.setText(it.header)
-                tvDateTime.setText(it.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note))
+            viewModel.noteData.value?.let {
+                etTitle.setText(it.note.header)
+                tvDateTime.text = it.note.timeStamp.format(DateTimeFormatter.ofPattern("dd MMM yyy")) ?: resources.getText(R.string.default_first_note)
             }
 
-            etTitle.requestFocus()
+
         }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
@@ -75,7 +75,6 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
                     Log.i(TAG, "onBackPressed started")
                     addNote()
                 }
-
             })
 
         return  binding.root
@@ -84,42 +83,65 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.header.apply {
-            setOnMenuItemClickListener { item ->
-                when(item.itemId) {
-                    R.id.addNoteItem -> {
-                        addItem()
-                        true
-                    }
+        binding.apply {
+            header.apply {
+                setOnMenuItemClickListener { item ->
+                    when(item.itemId) {
+                        R.id.addNoteItem -> {
+                            addItem()
+                            true
+                        }
 
-                    R.id.removeNoteItem -> {
-                        deleteItem(adapter.activePosition)
-//                        adapter.notifyDataSetChanged()
-                        true
-                    }
+                        R.id.removeNoteItem -> {
+                            deleteItem(adapter.activePosition)
+                            true
+                        }
 
-                    else -> false
+                        else -> false
+                    }
+                }
+
+                setNavigationOnClickListener {
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
                 }
             }
 
-            setNavigationOnClickListener { addNote() }
+            etTitle.apply {
+                doOnTextChanged{text, _, _, _ ->
+                    viewModel.setTitle(text.toString())
+                    binding.etTitle.setSelection(binding.etTitle.text.length)
+                }
+
+                setOnFocusChangeListener { _, hasFocus ->
+                    if(hasFocus) {
+                        adapter.activePosition = null
+                        showInput(this)
+                    }
+                }
+                requestFocus()
+            }
         }
 
-        binding.etTitle.doOnTextChanged{text, _, _, _ ->
-            viewModel.setTitle(text.toString())
-        }
+
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.note.collect { noteData ->
-
+                viewModel.noteData.collect { nd ->
+                    Log.i(TAG, "noteData note changed")
+                    nd?.let {
+                        Log.i(TAG, "noteData note updated")
+                        updateHeader(it.note.header)
+                        updateItems(it.items)
+                    }
                 }
             }
         }
+
 
     }
 
     override fun onDestroyView() {
+        Log.i(TAG, "onDestroyView started")
         super.onDestroyView()
         _binding = null
         viewLifecycleOwner.lifecycleScope.launch {
@@ -130,24 +152,53 @@ class NoteFragment: Fragment(R.layout.fragment_note) {
 
     private fun addNote() {
         Log.i(TAG, "addNote started")
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            viewModel.addNote(noteData)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.saveNoteDataChanges()
         }
         findNavController().navigate(R.id.exitNote)
     }
 
     private fun addItem() {
-        val item = Item(parentId = viewModel.note.value.noteId)
-        viewModel.addItem(item)
-        val position = viewModel.items.value.size - 1
-        adapter.notifyItemInserted(position)
-        binding.rvItems.layoutManager?.scrollToPosition(position)
+        viewModel.updaterType = ItemsAdapterUpdaterType.ADD
+        viewModel.noteData.value?.let {
+            val item = Item(parentId = it.note.noteId)
+            viewModel.addItem(item)
+        }
     }
 
-    private fun deleteItem(pos: Int) {
+    private fun deleteItem(pos: UUID?) {
+        if (pos == null) return
+        viewModel.updaterType = ItemsAdapterUpdaterType.DELETE
         viewModel.removeItem(pos)
-        adapter.notifyItemRemoved(pos)
-        adapter.notifyItemRangeChanged(pos, viewModel.items.value.size - 1)
+    }
+
+    private fun updateHeader(text: String?) {
+        binding.etTitle.setText(text)
+    }
+
+    private fun updateItems(items: List<Item>?) {
+        Log.i(TAG, "updateItems started")
+        items?.let {
+            val itemsAdapterUpdater = ItemsAdapterUpdaterSupplier(viewModel.updaterType).get()
+            Log.i(TAG, "itemsAdapter = ${itemsAdapterUpdater.javaClass.simpleName}")
+            itemsAdapterUpdater.update(adapter, it)
+            if(viewModel.updaterType == ItemsAdapterUpdaterType.ADD) {
+                binding.rvItems.layoutManager?.scrollToPosition(it.size - 1)
+            }
+        }
+    }
+
+    private fun updateItem(item: Item) {
+        Log.i(TAG, "updateItem started")
+        viewModel.updaterType = ItemsAdapterUpdaterType.UPDATE
+        viewModel.updateItem(item)
+    }
+
+    private fun showInput(view: View) {
+        Log.i(TAG, "showInput started")
+//        val manager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val manager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        manager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
     }
 
 }

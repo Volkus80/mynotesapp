@@ -13,17 +13,18 @@ data class Item(
     @PrimaryKey val itemId: UUID = UUID.randomUUID(),
     val parentId: UUID,
     var text: String = "",
-    var isDone: Boolean = false): Parcelable {
+    var isDone: Boolean = false): Parcelable
+{
         override fun equals(other: Any?): Boolean {
-            return if (other !is Item) {
-                return false
-            } else {
-                other.itemId == this.itemId
-            }
+            if(other !is Item) return  false
+
+            return (
+                    other.itemId == itemId
+                            && other.isDone == isDone
+                            && other.text == text
+                            && other.parentId == parentId
+                    )
         }
 
-        override fun hashCode(): Int {
-            return itemId.toString().hashCode()
-        }
-    }
+}
 

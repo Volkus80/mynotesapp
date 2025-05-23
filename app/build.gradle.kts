@@ -24,6 +24,7 @@ android {
     }
 
     configurations {
+
         create("cleanedAnnotations")
         implementation {
             exclude(group = "org.jetbrains", module = "annotations")

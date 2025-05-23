@@ -32,7 +32,8 @@ class NoteViewHolder(val binding: LayoutNoteListItemBinding, val cb: (note: Note
     }
 }
 
-class NotesListAdapter(val notes: MutableList<NoteData>, val cb: (note: NoteData) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
+class NotesListAdapter(val notes: MutableList<NoteData>,
+                       val cb: (note: NoteData) -> Unit = {}): RecyclerView.Adapter<NoteViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val binding = LayoutNoteListItemBinding.inflate(inflater, parent, false)

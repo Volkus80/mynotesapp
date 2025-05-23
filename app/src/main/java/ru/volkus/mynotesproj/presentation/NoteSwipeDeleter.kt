@@ -24,7 +24,7 @@ class NoteSwipeDeleter(val adapter: NotesListAdapter?, val context: Context, val
             .setTitle(R.string.delete_note_dialog_title)
             .setMessage(R.string.delete_note_dialog_message)
             .setPositiveButton(R.string.yes) { _, _ ->
-                noteViewHolder.note.let { cb(noteViewHolder.note!!) }
+                noteViewHolder.note?.let { cb(noteViewHolder.note!!) }
             }
             .setNegativeButton(R.string.no) { _, _ ->
                 adapter?.notifyItemChanged(position)

@@ -16,15 +16,15 @@ import java.util.UUID
 @Dao
 interface NotesDAO {
     @Transaction
-    @Query("SELECT * FROM notes")
+    @Query("SELECT * FROM notes ORDER BY timeStamp DESC")
     fun getNotes(): Flow<MutableList<NoteData>>
 
     @Transaction
     @Query("SELECT * FROM notes WHERE noteId = :id")
-    suspend fun getNote(id: UUID): NoteData
+    fun getNote(id: UUID): Flow<NoteData?>
 
     @Transaction
-    @Query("SELECT * FROM notes WHERE header LIKE '%' || :filterValue || '%'")
+    @Query("SELECT * FROM notes WHERE header LIKE '%' || :filterValue || '%' ORDER BY timeStamp DESC")
     fun filterNotes(filterValue: String): Flow<MutableList<NoteData>>
 
     @Query("SELECT * FROM items WHERE parentId = (:id)")

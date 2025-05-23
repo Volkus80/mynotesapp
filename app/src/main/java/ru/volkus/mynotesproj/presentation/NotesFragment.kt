@@ -24,8 +24,7 @@ import ru.volkus.mynotesproj.models.NoteData
 import ru.volkus.mynotesproj.models.NoteState
 
 private const val TAG = "NotesFragment"
-const val NOTE_KEY = "note"
-const val EDIT_TYPE_KEY = "editTypeKey"
+
 class NotesFragment: Fragment(R.layout.fragment_notes) {
     private var _binding: FragmentNotesBinding? = null
 
@@ -55,7 +54,7 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         binding.rvNotesList.adapter = adapter
 
         val noteSwipeDeleter = NoteSwipeDeleter(adapter, requireContext()){ pos ->
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.removeNote(pos)
             }
         }
@@ -66,7 +65,7 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
         binding.etFind.setText(viewModel.filterValue.value)
 
         viewModel.filterValue.observe(viewLifecycleOwner) {
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch {
                 delay(500)
                 viewModel.filter()
             }
@@ -113,6 +112,7 @@ class NotesFragment: Fragment(R.layout.fragment_notes) {
     }
 
     private fun goToNote(note: NoteData, noteState: NoteState) {
+        Log.i(TAG, "goToNote started noteData = $note noteState = $noteState")
         findNavController().navigate(NotesFragmentDirections.goToNote(note.note.noteId, noteState))
 //        findNavController().navigate(R.id.goToNote, bundleOf(NOTE_KEY to note))
     }
